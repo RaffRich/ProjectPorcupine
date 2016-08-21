@@ -1,4 +1,12 @@
-﻿using UnityEngine;
+#region License
+// ====================================================
+// Project Porcupine Copyright(C) 2016 Team Porcupine
+// This program comes with ABSOLUTELY NO WARRANTY; This is free software, 
+// and you are welcome to redistribute it under certain conditions; See 
+// file LICENSE, which is part of this source code package, for details.
+// ====================================================
+#endregion
+using UnityEngine;
 using System.Collections.Generic;
 using System.IO;
 using System.Xml;
@@ -12,7 +20,25 @@ public class SpriteManager : MonoBehaviour
 
     static public SpriteManager current;
 
+    public static Texture2D noRescourceTexture;
+
     Dictionary<string, Sprite> sprites;
+
+    void Awake()
+    {
+        if (noRescourceTexture == null)
+        {
+            //Generate a 32x32 magenta image
+            noRescourceTexture = new Texture2D(32, 32, TextureFormat.ARGB32, false);
+            Color32[] pixels = noRescourceTexture.GetPixels32();
+            for (int i = 0; i < pixels.Length; i++)
+            {
+                pixels[i] = new Color32(255, 0, 255, 255);
+            }
+            noRescourceTexture.SetPixels32(pixels);
+            noRescourceTexture.Apply();
+        }
+    }
 
     // Use this for initialization
     void OnEnable()
@@ -37,7 +63,7 @@ public class SpriteManager : MonoBehaviour
 
     void LoadSpritesFromDirectory(string filePath)
     {
-        Debug.Log("LoadSpritesFromDirectory: " + filePath);
+        Logger.Log("LoadSpritesFromDirectory: " + filePath);
         // First, we're going to see if we have any more sub-directories,
         // if so -- call LoadSpritesFromDirectory on that.
 
@@ -68,7 +94,7 @@ public class SpriteManager : MonoBehaviour
 
     void LoadImage(string spriteCategory, string filePath)
     {
-        //Debug.Log("LoadImage: " + filePath);
+        //Logger.Log("LoadImage: " + filePath);
 
         // TODO:  LoadImage is returning TRUE for things like .meta and .xml files.  What??!
         //		So as a temporary fix, let's just bail if we have something we KNOW should not
@@ -114,7 +140,7 @@ public class SpriteManager : MonoBehaviour
                 }
                 else
                 {
-                    Debug.LogError("Could not find a <Sprites> tag.");
+                    Logger.LogError("Could not find a <Sprites> tag.");
                     return;
                 }
 
@@ -137,7 +163,7 @@ public class SpriteManager : MonoBehaviour
 
     void ReadSpriteFromXml(string spriteCategory, XmlReader reader, Texture2D imageTexture)
     {
-        //Debug.Log("ReadSpriteFromXml");
+        //Logger.Log("ReadSpriteFromXml");
         string name = reader.GetAttribute("name");
         int x = int.Parse(reader.GetAttribute("x"));
         int y = int.Parse(reader.GetAttribute("y"));
@@ -151,7 +177,7 @@ public class SpriteManager : MonoBehaviour
     void LoadSprite(string spriteCategory, string spriteName, Texture2D imageTexture, Rect spriteCoordinates, int pixelsPerUnit)
     {
         spriteName = spriteCategory + "/" + spriteName;
-        //Debug.Log("LoadSprite: " + spriteName);
+        //Logger.Log("LoadSprite: " + spriteName);
         Vector2 pivotPoint = new Vector2(0.5f, 0.5f);	// Ranges from 0..1 -- so 0.5f == center
 
         Sprite s = Sprite.Create(imageTexture, spriteCoordinates, pivotPoint, pixelsPerUnit);
@@ -161,15 +187,16 @@ public class SpriteManager : MonoBehaviour
 
     public Sprite GetSprite(string categoryName, string spriteName)
     {
-        //Debug.Log(spriteName);
-
+        //Logger.Log(spriteName);
 
         spriteName = categoryName + "/" + spriteName;
 
         if (sprites.ContainsKey(spriteName) == false)
         {
-            //Debug.LogError("No sprite with name: " + spriteName);
-            return null;	// TODO: What if we return a "dummy" sprite, like a purple square?
+            //Logger.LogError("No sprite with name: " + spriteName);
+            
+            //Return a magenta image
+            return Sprite.Create(noRescourceTexture, new Rect(Vector2.zero, new Vector3(32, 32)), new Vector2(0.5f, 0.5f), 32);
         }
 
         return sprites[spriteName];
